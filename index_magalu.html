@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Magalu Conecta 💙</title>
+  <style>
+    :root {
+      --azul-magalu: #007bff;
+      --azul-gradiente: linear-gradient(135deg, #007bff, #00c6ff);
+      --fundo: #f4f7fb;
+      --branco: #fff;
+      --sombra: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: var(--fundo);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      width: 100%;
+      background: var(--azul-gradiente);
+      color: white;
+      text-align: center;
+      padding: 25px 10px;
+      box-shadow: var(--sombra);
+    }
+
+    h1 {
+      font-size: 26px;
+      margin: 0;
+    }
+
+    p {
+      margin-top: 5px;
+      font-size: 15px;
+      opacity: 0.9;
+    }
+
+    .upload-card {
+      background: var(--branco);
+      margin-top: 25px;
+      border-radius: 20px;
+      padding: 25px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: var(--sombra);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .custom-file {
+      background: var(--azul-gradiente);
+      color: white;
+      padding: 12px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+
+    .btn-enviar {
+      background: var(--azul-gradiente);
+      border: none;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s;
+    }
+
+    .btn-enviar:hover {
+      transform: scale(1.05);
+    }
+
+    #preview {
+      margin-top: 15px;
+    }
+
+    img, video {
+      max-width: 100%;
+      border-radius: 15px;
+      margin-top: 10px;
+      box-shadow: var(--sombra);
+    }
+
+    .feed {
+      width: 95%;
+      max-width: 600px;
+      margin: 30px 0 60px 0;
+      display: grid;
+      gap: 20px;
+    }
+
+    .feed-item {
+      background: var(--branco);
+      border-radius: 15px;
+      box-shadow: var(--sombra);
+      padding: 15px;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .feed-item video,
+    .feed-item img {
+      width: 100%;
+      border-radius: 12px;
+    }
+
+    .feed-item small {
+      color: #666;
+      font-size: 12px;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 13px;
+      color: #555;
+      margin-top: auto;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #ddd;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 15px auto;
+    }
+
+    @keyframes spin {
+      0% {transform: rotate(0deg);}
+      100% {transform: rotate(360deg);}
+    }
+
+    .like-btn, .delete-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .like-btn {
+      color: #e63946;
+    }
+
+    .delete-btn {
+      color: #d11;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>💙 Magalu Conecta</h1>
+    <p>Compartilhe fotos e vídeos com a equipe!</p>
+  </header>
+
+  <div class="upload-card">
+    <label class="custom-file" for="fileInput">📸 Escolher arquivo</label>
+    <input type="file" id="fileInput" accept="image/*,video/*">
+    <br>
+    <button class="btn-enviar" onclick="uploadFile()">🚀 Enviar</button>
+    <div id="preview"></div>
+  </div>
+
+  <h2 style="margin-top:40px;">📲 Feed da equipe</h2>
+  <div id="feed" class="feed"></div>
+
+  <footer>
+    Desenvolvido com 💙 para o time Magalu
+  </footer>
+
+  <!-- ✅ Script moderno com módulo -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, orderBy, query, doc, updateDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+    //Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAGA41rTCZTaYE5CKIJVkukz1bcNksyBX0",
+  authDomain: "magalu-conecta-novo.firebaseapp.com",
+  projectId: "magalu-conecta-novo",
+  storageBucket: "magalu-conecta-novo.firebasestorage.app",
+  messagingSenderId: "320590850083",
+  appId: "1:320590850083:web:6ccd2a8e1d443c39e66996"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // 📤 Upload de arquivo
+    async function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const preview = document.getElementById('preview');
+
+      if (!fileInput.files.length) {
+        alert('Escolha uma foto ou vídeo primeiro!');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const fileName = Date.now() + "_" + file.name;
+      const fileRef = ref(storage, 'uploads/' + fileName);
+
+      preview.innerHTML = '<div class="spinner"></div><p>Enviando...</p>';
+
+      try {
+        await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(fileRef);
+
+        await addDoc(collection(db, "uploads"), {
+    url: url,
+    path: 'uploads/' + fileName,   // ← ESSENCIAL
+    likes: 0,
+    criadoEm: new Date(),
+});
+
+        preview.innerHTML = '<p style="color:green;">✅ Enviado com sucesso!</p>';
+        fileInput.value = '';
+        loadFeed();
+      } catch (error) {
+        preview.innerHTML = '<p style="color:red;">❌ Erro: ' + error.message + '</p>';
+      }
+    }
+
+    // 📥 Carregar o feed
+    async function loadFeed() {
+      const feed = document.getElementById('feed');
+      feed.innerHTML = '<div class="spinner"></div>';
+
+      const q = query(collection(db, "uploads"), orderBy("date", "desc"));
+      const snapshot = await getDocs(q);
+
+      feed.innerHTML = '';
+      if (snapshot.empty) {
+        feed.innerHTML = '<p style="color:#777;">Nenhum envio ainda 😅</p>';
+        return;
+      }
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        const item = document.createElement('div');
+        item.className = 'feed-item';
+
+        const mediaHTML = data.type === 'image'
+          ? `<img src="${data.url}" alt="Imagem">`
+          : `<video src="${data.url}" controls></video>`;
+
+        item.innerHTML = `
+          ${mediaHTML}
+          <div style="margin-top:8px; display:flex; justify-content:center; align-items:center; gap:12px;">
+            <button class="like-btn" id="like-${id}">❤️ <span id="count-${id}">${data.likes || 0}</span></button>
+            <button class="delete-btn" id="delete-${id}">🗑️</button>
+          </div>
+          <small>${new Date(data.date).toLocaleString()}</small>
+        `;
+
+        feed.appendChild(item);
+
+        // Curtidas em tempo real
+        onSnapshot(doc(db, "uploads", id), (snap) => {
+          if (snap.exists()) {
+            document.getElementById(`count-${id}`).textContent = snap.data().likes || 0;
+          }
+        });
+
+        // Ações dos botões
+        document.getElementById(`like-${id}`).onclick = async () => {
+          const ref = doc(db, "uploads", id);
+          const newLikes = (data.likes || 0) + 1;
+          await updateDoc(ref, { likes: newLikes });
+        };
+
+        document.getElementById(`delete-${id}`).onclick = async () => {
+          if (!confirm("Tem certeza que deseja excluir este envio?")) return;
+          try {
+            const storageRef = ref(storage, data.path);
+            await deleteObject(storageRef).catch(()=>{});
+            await deleteDoc(doc(db, "uploads", id));
+            loadFeed();
+            alert("✅ Arquivo excluído com sucesso!");
+          } catch (err) {
+            alert("❌ Erro ao excluir: " + err.message);
+          }
+        };
+      });
+    }
+
+    window.uploadFile = uploadFile;
+    window.loadFeed = loadFeed;
+
+    loadFeed();
+  </script>
+</body>
+</html>
